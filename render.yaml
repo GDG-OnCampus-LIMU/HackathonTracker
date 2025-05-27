@@ -1,0 +1,67 @@
+#ADD TO GIT IGNORE
+services:
+  - type: web
+    name: hackathon-tracker
+    runtime: docker
+    repo: https://github.com/YOUR_USERNAME/hackathon-tracker
+    branch: main
+    envVars:
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: stack
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: hackathon-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: hackathon-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: hackathon-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: hackathon-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: hackathon-db
+          property: password
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: hackathon-redis
+          property: host
+      - key: REDIS_PASSWORD
+        fromService:
+          type: redis
+          name: hackathon-redis
+          property: password
+      - key: REDIS_PORT
+        value: 6379
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader
+      php artisan config:cache
+      php artisan route:cache
+      php artisan view:cache
+    startCommand: |
+      php artisan migrate --force
+      php artisan serve --host=0.0.0.0 --port=$PORT
+
+databases:
+  - name: hackathon-db
+    plan: starter
+
+services:
+  - type: redis
+    name: hackathon-redis
+    plan: starter
